@@ -10,18 +10,6 @@
             margin: 0;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
         }
-        .chart-container {
-            width: 100%;
-            height: 500px;
-            background: #f8fafc;
-            border: 2px dashed #cbd5e1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            color: #64748b;
-            font-size: 18px;
-        }
         .filter-button {
             padding: 8px 12px;
             margin: 4px;
@@ -72,6 +60,102 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             overflow: hidden;
         }
+        #chartContainer {
+            position: relative;
+            height: 500px;
+            width: 100%;
+            background: #f8fafc;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .chart-canvas {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        /* 自定义柱状图样式 */
+        .bar-chart {
+            display: flex;
+            align-items: end;
+            height: 400px;
+            padding: 20px;
+            gap: 8px;
+            overflow-x: auto;
+        }
+        .bar-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 60px;
+            height: 100%;
+        }
+        .bar {
+            background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+            border-radius: 4px 4px 0 0;
+            min-width: 40px;
+            transition: all 0.3s;
+            position: relative;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .bar:hover {
+            background: linear-gradient(45deg, #2563eb, #1e40af);
+            transform: scale(1.05);
+        }
+        .bar-label {
+            font-size: 10px;
+            color: #6b7280;
+            margin-top: 8px;
+            text-align: center;
+            transform: rotate(-45deg);
+            white-space: nowrap;
+        }
+        .bar-value {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .bar:hover .bar-value {
+            opacity: 1;
+        }
+        /* 饼图样式 */
+        .pie-chart {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 400px;
+            gap: 40px;
+        }
+        .pie-svg {
+            width: 300px;
+            height: 300px;
+        }
+        .pie-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 2px;
+        }
     </style>
 </head>
 <body>
@@ -96,44 +180,45 @@
                 <!-- 视图切换 -->
                 <div class="flex justify-center mb-6">
                     <div class="bg-white rounded-lg p-1 shadow-md">
-                        <button id="bar-view" class="view-button active">柱状图</button>
-                        <button id="pie-view" class="view-button">饼图</button>
+                        <button id="bar-view" class="view-button active">📊 柱状图</button>
+                        <button id="pie-view" class="view-button">🥧 饼图</button>
                     </div>
                 </div>
 
                 <!-- 统计卡片 -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                     <div class="stat-card">
-                        <h3 class="text-sm font-medium text-gray-500">活动总数</h3>
+                        <h3 class="text-sm font-medium text-gray-500">📈 活动总数</h3>
                         <p id="total-count" class="text-2xl font-bold text-gray-900">20</p>
                         <p id="excluded-count" class="text-xs text-gray-400"></p>
                     </div>
                     <div class="stat-card">
-                        <h3 class="text-sm font-medium text-gray-500">总参与度</h3>
+                        <h3 class="text-sm font-medium text-gray-500">🎯 总参与度</h3>
                         <p id="total-engagement" class="text-2xl font-bold text-gray-900">--</p>
                     </div>
                     <div class="stat-card">
-                        <h3 class="text-sm font-medium text-gray-500">最高活动</h3>
+                        <h3 class="text-sm font-medium text-gray-500">🏆 最高活动</h3>
                         <p id="highest-name" class="text-lg font-bold text-gray-900">--</p>
                         <p id="highest-value" class="text-sm text-gray-600">--</p>
                     </div>
                     <div class="stat-card">
-                        <h3 class="text-sm font-medium text-gray-500">平均参与度</h3>
+                        <h3 class="text-sm font-medium text-gray-500">📊 平均参与度</h3>
                         <p id="average-engagement" class="text-2xl font-bold text-gray-900">--</p>
                     </div>
                 </div>
 
                 <!-- 图表容器 -->
                 <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-                    <div id="chart-area" class="chart-container">
-                        📊 图表区域（简化版本 - 数据显示在下方表格中）
+                    <h3 id="chart-title" class="text-lg font-semibold mb-4 text-center">📊 活动参与度柱状图</h3>
+                    <div id="chartContainer">
+                        <!-- 图表内容将由JavaScript动态生成 -->
                     </div>
                 </div>
 
                 <!-- 表格 -->
                 <div class="table-container">
                     <div class="px-6 py-4 bg-gray-50 border-b">
-                        <h2 class="text-xl font-semibold text-gray-800">活动排行榜</h2>
+                        <h2 class="text-xl font-semibold text-gray-800">🏅 活动排行榜</h2>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full">
@@ -182,6 +267,14 @@
 
         let excludedItems = [];
         let currentView = 'bar';
+
+        // 颜色配置
+        const colors = [
+            '#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1',
+            '#d084d0', '#ffb347', '#87ceeb', '#dda0dd', '#98fb98',
+            '#f0e68c', '#ff6347', '#40e0d0', '#ee82ee', '#90ee90',
+            '#ffd700', '#ff69b4', '#00ced1', '#ff1493', '#32cd32'
+        ];
 
         // 工具函数
         function formatNumber(value) {
@@ -256,6 +349,113 @@
             }
         }
 
+        // 创建柱状图
+        function createBarChart(data) {
+            const maxValue = Math.max(...data.map(item => item.value));
+            const chartContainer = document.getElementById('chartContainer');
+            
+            chartContainer.innerHTML = '';
+            chartContainer.className = 'bar-chart';
+            
+            data.slice(0, 15).forEach((item, index) => {
+                const barItem = document.createElement('div');
+                barItem.className = 'bar-item';
+                
+                const height = (item.value / maxValue) * 350;
+                const color = colors[index % colors.length];
+                
+                barItem.innerHTML = `
+                    <div class="bar" style="height: ${height}px; background: linear-gradient(45deg, ${color}, ${color}dd);">
+                        <div class="bar-value">${formatNumber(item.value)}</div>
+                    </div>
+                    <div class="bar-label">${item.name.length > 12 ? item.name.substring(0, 12) + '...' : item.name}</div>
+                `;
+                
+                chartContainer.appendChild(barItem);
+            });
+        }
+
+        // 创建饼图
+        function createPieChart(data) {
+            const chartContainer = document.getElementById('chartContainer');
+            chartContainer.innerHTML = '';
+            chartContainer.className = 'pie-chart';
+            
+            const total = data.reduce((sum, item) => sum + item.value, 0);
+            let currentAngle = 0;
+            
+            // 创建SVG饼图
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('class', 'pie-svg');
+            svg.setAttribute('viewBox', '0 0 200 200');
+            
+            // 创建图例
+            const legend = document.createElement('div');
+            legend.className = 'pie-legend';
+            
+            data.slice(0, 10).forEach((item, index) => {
+                const percentage = (item.value / total) * 100;
+                const angle = (item.value / total) * 360;
+                
+                if (percentage > 1) { // 只显示占比大于1%的部分
+                    // 创建饼图切片
+                    const slice = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    const startAngle = currentAngle * Math.PI / 180;
+                    const endAngle = (currentAngle + angle) * Math.PI / 180;
+                    
+                    const x1 = 100 + 80 * Math.cos(startAngle);
+                    const y1 = 100 + 80 * Math.sin(startAngle);
+                    const x2 = 100 + 80 * Math.cos(endAngle);
+                    const y2 = 100 + 80 * Math.sin(endAngle);
+                    
+                    const largeArc = angle > 180 ? 1 : 0;
+                    
+                    const pathData = `M 100 100 L ${x1} ${y1} A 80 80 0 ${largeArc} 1 ${x2} ${y2} Z`;
+                    
+                    slice.setAttribute('d', pathData);
+                    slice.setAttribute('fill', colors[index % colors.length]);
+                    slice.setAttribute('stroke', 'white');
+                    slice.setAttribute('stroke-width', '2');
+                    
+                    svg.appendChild(slice);
+                    
+                    currentAngle += angle;
+                }
+                
+                // 创建图例项
+                const legendItem = document.createElement('div');
+                legendItem.className = 'legend-item';
+                legendItem.innerHTML = `
+                    <div class="legend-color" style="background-color: ${colors[index % colors.length]}"></div>
+                    <span>${item.name.length > 20 ? item.name.substring(0, 20) + '...' : item.name}</span>
+                    <span class="text-gray-500">(${percentage.toFixed(1)}%)</span>
+                `;
+                legend.appendChild(legendItem);
+            });
+            
+            chartContainer.appendChild(svg);
+            chartContainer.appendChild(legend);
+        }
+
+        // 更新图表
+        function updateChart() {
+            const sortedData = getSortedData();
+            
+            if (sortedData.length === 0) {
+                document.getElementById('chartContainer').innerHTML = 
+                    '<div class="text-center py-20"><p class="text-gray-500 text-lg">没有数据可显示</p></div>';
+                return;
+            }
+            
+            if (currentView === 'bar') {
+                document.getElementById('chart-title').textContent = '📊 活动参与度柱状图';
+                createBarChart(sortedData);
+            } else {
+                document.getElementById('chart-title').textContent = '🥧 活动参与度分布饼图';
+                createPieChart(sortedData);
+            }
+        }
+
         // 更新表格
         function updateTable() {
             const sortedData = getSortedData();
@@ -269,8 +469,16 @@
                 const percentage = total > 0 ? ((item.value / total) * 100).toFixed(1) : '0';
                 const row = document.createElement('tr');
                 row.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                
+                // 添加表情符号根据排名
+                let rankEmoji = '';
+                if (index === 0) rankEmoji = '🥇';
+                else if (index === 1) rankEmoji = '🥈';
+                else if (index === 2) rankEmoji = '🥉';
+                else rankEmoji = `#${index + 1}`;
+                
                 row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#${index + 1}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${rankEmoji}</td>
                     <td class="px-6 py-4 text-sm text-gray-900">${item.name}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.value.toLocaleString()}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${percentage}%</td>
@@ -283,6 +491,7 @@
         function updateDisplay() {
             generateFilterButtons();
             updateStats();
+            updateChart();
             updateTable();
             
             // 显示/隐藏重置按钮
@@ -299,12 +508,7 @@
             document.getElementById('pie-view').className = 
                 view === 'pie' ? 'view-button active' : 'view-button';
             
-            const chartArea = document.getElementById('chart-area');
-            if (view === 'bar') {
-                chartArea.textContent = '📊 柱状图视图（数据详情请查看下方表格）';
-            } else {
-                chartArea.textContent = '🥧 饼图视图（数据详情请查看下方表格）';
-            }
+            updateChart();
         }
 
         // 事件监听
@@ -312,8 +516,10 @@
         document.getElementById('pie-view').onclick = () => switchView('pie');
         document.getElementById('reset-filter').onclick = resetFilter;
 
-        // 初始化
-        updateDisplay();
+        // 页面加载完成后初始化
+        window.addEventListener('load', function() {
+            updateDisplay();
+        });
     </script>
 </body>
 </html>
