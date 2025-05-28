@@ -78,7 +78,7 @@
         .bar-chart {
             position: relative;
             height: 500px;
-            padding: 40px 60px 80px 80px;
+            padding: 40px 60px 20px 80px;
             background: white;
             border-radius: 12px;
             overflow-x: auto;
@@ -89,7 +89,7 @@
             left: 80px;
             right: 60px;
             top: 40px;
-            bottom: 80px;
+            bottom: 20px;
             background-image: 
                 linear-gradient(to right, #e5e7eb 1px, transparent 1px),
                 linear-gradient(to top, #e5e7eb 1px, transparent 1px);
@@ -99,7 +99,7 @@
             position: absolute;
             left: 20px;
             top: 40px;
-            bottom: 80px;
+            bottom: 20px;
             width: 60px;
             display: flex;
             flex-direction: column;
@@ -112,7 +112,7 @@
             left: 80px;
             right: 60px;
             top: 40px;
-            bottom: 80px;
+            bottom: 20px;
             display: flex;
             align-items: flex-end;
             gap: 8px;
@@ -139,20 +139,6 @@
         .bar:hover {
             background: linear-gradient(135deg, #7c3aed, #6d28d9);
             transform: scaleX(1.1);
-        }
-        .bar-label {
-            position: absolute;
-            bottom: -70px;
-            font-size: 11px;
-            color: #374151;
-            text-align: center;
-            transform: rotate(-45deg);
-            white-space: nowrap;
-            font-weight: 500;
-            width: 100px;
-            left: 50%;
-            transform-origin: center top;
-            margin-left: -50px;
         }
         .tooltip {
             position: absolute;
@@ -188,6 +174,39 @@
             height: 12px;
             background: linear-gradient(135deg, #8b5cf6, #7c3aed);
             border-radius: 2px;
+        }
+        /* 项目名称显示区域 */
+        .project-names-area {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-top: 16px;
+            overflow-x: auto;
+        }
+        .project-names-container {
+            display: flex;
+            gap: 8px;
+            min-width: max-content;
+            align-items: center;
+        }
+        .project-name-item {
+            width: 50px;
+            text-align: center;
+            font-size: 11px;
+            color: #374151;
+            font-weight: 500;
+            transform: rotate(-45deg);
+            white-space: nowrap;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        .project-name-item:hover {
+            color: #8b5cf6;
         }
         /* 饼图样式 */
         .pie-chart {
@@ -292,6 +311,12 @@
                     <h3 id="chart-title" class="text-lg font-semibold mb-4 text-center">📊 活动参与度柱状图</h3>
                     <div id="chartContainer">
                         <!-- 图表内容将由JavaScript动态生成 -->
+                    </div>
+                    <!-- 项目名称显示区域 -->
+                    <div id="projectNamesArea" class="project-names-area" style="display: none;">
+                        <div id="projectNamesContainer" class="project-names-container">
+                            <!-- 项目名称将由JavaScript动态生成 -->
+                        </div>
                     </div>
                 </div>
 
@@ -433,9 +458,13 @@
         function createBarChart(data) {
             const maxValue = Math.max(...data.map(item => item.value));
             const chartContainer = document.getElementById('chartContainer');
+            const projectNamesArea = document.getElementById('projectNamesArea');
+            const projectNamesContainer = document.getElementById('projectNamesContainer');
             
             chartContainer.innerHTML = '';
             chartContainer.className = 'bar-chart';
+            projectNamesContainer.innerHTML = '';
+            projectNamesArea.style.display = 'block';
             
             // 创建网格
             const grid = document.createElement('div');
@@ -477,10 +506,6 @@
                 bar.className = 'bar';
                 bar.style.height = `${height}%`;
                 
-                const label = document.createElement('div');
-                label.className = 'bar-label';
-                label.textContent = item.name;
-                
                 // 添加悬停事件
                 bar.addEventListener('mouseenter', (e) => {
                     tooltip.innerHTML = `
@@ -501,8 +526,25 @@
                 });
                 
                 barItem.appendChild(bar);
-                barItem.appendChild(label);
                 barsContainer.appendChild(barItem);
+                
+                // 创建对应的项目名称
+                const nameItem = document.createElement('div');
+                nameItem.className = 'project-name-item';
+                nameItem.textContent = item.name;
+                
+                // 添加名称悬停效果
+                nameItem.addEventListener('mouseenter', () => {
+                    bar.style.background = 'linear-gradient(135deg, #7c3aed, #6d28d9)';
+                    bar.style.transform = 'scaleX(1.1)';
+                });
+                
+                nameItem.addEventListener('mouseleave', () => {
+                    bar.style.background = 'linear-gradient(135deg, #8b5cf6, #7c3aed)';
+                    bar.style.transform = 'scaleX(1)';
+                });
+                
+                projectNamesContainer.appendChild(nameItem);
             });
             
             chartContainer.appendChild(barsContainer);
@@ -622,6 +664,7 @@
             if (sortedData.length === 0) {
                 document.getElementById('chartContainer').innerHTML = 
                     '<div class="text-center py-20"><p class="text-gray-500 text-lg">没有数据可显示</p></div>';
+                document.getElementById('projectNamesArea').style.display = 'none';
                 return;
             }
             
@@ -630,6 +673,7 @@
                 createBarChart(sortedData);
             } else {
                 document.getElementById('chart-title').textContent = '🥧 活动参与度分布饼图';
+                document.getElementById('projectNamesArea').style.display = 'none';
                 createPieChart(sortedData);
             }
         }
