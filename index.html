@@ -76,85 +76,165 @@
         }
         /* 自定义柱状图样式 */
         .bar-chart {
-            display: flex;
-            align-items: end;
-            height: 400px;
-            padding: 20px;
-            gap: 8px;
+            position: relative;
+            height: 500px;
+            padding: 40px 60px 80px 80px;
+            background: white;
+            border-radius: 12px;
             overflow-x: auto;
+            overflow-y: hidden;
+        }
+        .chart-grid {
+            position: absolute;
+            left: 80px;
+            right: 60px;
+            top: 40px;
+            bottom: 80px;
+            background-image: 
+                linear-gradient(to right, #e5e7eb 1px, transparent 1px),
+                linear-gradient(to top, #e5e7eb 1px, transparent 1px);
+            background-size: 60px 20%;
+        }
+        .y-axis {
+            position: absolute;
+            left: 20px;
+            top: 40px;
+            bottom: 80px;
+            width: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .bars-container {
+            position: absolute;
+            left: 80px;
+            right: 60px;
+            top: 40px;
+            bottom: 80px;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            min-width: max-content;
         }
         .bar-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-width: 60px;
+            width: 50px;
             height: 100%;
+            position: relative;
+            justify-content: flex-end;
         }
         .bar {
-            background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
             border-radius: 4px 4px 0 0;
-            min-width: 40px;
+            width: 100%;
             transition: all 0.3s;
             position: relative;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            min-height: 2px;
         }
         .bar:hover {
-            background: linear-gradient(45deg, #2563eb, #1e40af);
-            transform: scale(1.05);
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            transform: scaleX(1.1);
         }
         .bar-label {
-            font-size: 10px;
-            color: #6b7280;
-            margin-top: 8px;
+            position: absolute;
+            bottom: -70px;
+            font-size: 11px;
+            color: #374151;
             text-align: center;
             transform: rotate(-45deg);
             white-space: nowrap;
-        }
-        .bar-value {
-            position: absolute;
-            top: -25px;
+            font-weight: 500;
+            width: 100px;
             left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
+            transform-origin: center top;
+            margin-left: -50px;
+        }
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
             color: white;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 10px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 1000;
             opacity: 0;
             transition: opacity 0.3s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
-        .bar:hover .bar-value {
+        .tooltip.show {
             opacity: 1;
+        }
+        .chart-title {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .legend-color-bar {
+            width: 20px;
+            height: 12px;
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            border-radius: 2px;
         }
         /* 饼图样式 */
         .pie-chart {
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 400px;
-            gap: 40px;
+            height: 450px;
+            gap: 50px;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 12px;
+            padding: 20px;
         }
         .pie-svg {
-            width: 300px;
-            height: 300px;
+            width: 320px;
+            height: 320px;
+            filter: drop-shadow(0 8px 16px rgba(0,0,0,0.1));
         }
         .pie-legend {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            max-height: 300px;
+            gap: 10px;
+            max-height: 320px;
             overflow-y: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            min-width: 280px;
         }
         .legend-item {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 12px;
+            gap: 12px;
+            font-size: 13px;
+            padding: 6px;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+        .legend-item:hover {
+            background-color: #f1f5f9;
         }
         .legend-color {
-            width: 16px;
-            height: 16px;
-            border-radius: 2px;
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
     </style>
 </head>
@@ -357,22 +437,84 @@
             chartContainer.innerHTML = '';
             chartContainer.className = 'bar-chart';
             
-            data.slice(0, 15).forEach((item, index) => {
+            // 创建网格
+            const grid = document.createElement('div');
+            grid.className = 'chart-grid';
+            chartContainer.appendChild(grid);
+            
+            // 创建Y轴刻度（从上到下：最大值到0）
+            const yAxis = document.createElement('div');
+            yAxis.className = 'y-axis';
+            
+            // 计算Y轴刻度值（从上到下）
+            const steps = 5;
+            for (let i = steps; i >= 0; i--) {
+                const value = (maxValue / steps) * i;
+                const label = document.createElement('div');
+                label.textContent = formatNumber(value);
+                label.style.textAlign = 'right';
+                yAxis.appendChild(label);
+            }
+            chartContainer.appendChild(yAxis);
+            
+            // 创建柱子容器
+            const barsContainer = document.createElement('div');
+            barsContainer.className = 'bars-container';
+            
+            // 创建悬停提示框
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            chartContainer.appendChild(tooltip);
+            
+            // 显示所有数据
+            data.forEach((item, index) => {
                 const barItem = document.createElement('div');
                 barItem.className = 'bar-item';
                 
-                const height = (item.value / maxValue) * 350;
-                const color = colors[index % colors.length];
+                const height = Math.max((item.value / maxValue) * 100, 0.5); // 百分比高度
                 
-                barItem.innerHTML = `
-                    <div class="bar" style="height: ${height}px; background: linear-gradient(45deg, ${color}, ${color}dd);">
-                        <div class="bar-value">${formatNumber(item.value)}</div>
-                    </div>
-                    <div class="bar-label">${item.name.length > 12 ? item.name.substring(0, 12) + '...' : item.name}</div>
-                `;
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                bar.style.height = `${height}%`;
                 
-                chartContainer.appendChild(barItem);
+                const label = document.createElement('div');
+                label.className = 'bar-label';
+                label.textContent = item.name;
+                
+                // 添加悬停事件
+                bar.addEventListener('mouseenter', (e) => {
+                    tooltip.innerHTML = `
+                        <div style="font-weight: bold; margin-bottom: 4px;">${item.name}</div>
+                        <div style="color: #60a5fa;">数值: ${item.value.toLocaleString()}</div>
+                    `;
+                    tooltip.classList.add('show');
+                });
+                
+                bar.addEventListener('mousemove', (e) => {
+                    const rect = chartContainer.getBoundingClientRect();
+                    tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
+                    tooltip.style.top = (e.clientY - rect.top - 10) + 'px';
+                });
+                
+                bar.addEventListener('mouseleave', () => {
+                    tooltip.classList.remove('show');
+                });
+                
+                barItem.appendChild(bar);
+                barItem.appendChild(label);
+                barsContainer.appendChild(barItem);
             });
+            
+            chartContainer.appendChild(barsContainer);
+            
+            // 添加图例
+            const chartTitle = document.createElement('div');
+            chartTitle.className = 'chart-title';
+            chartTitle.innerHTML = `
+                <div class="legend-color-bar"></div>
+                <span>参与度数量</span>
+            `;
+            chartContainer.appendChild(chartTitle);
         }
 
         // 创建饼图
@@ -387,35 +529,68 @@
             // 创建SVG饼图
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
             svg.setAttribute('class', 'pie-svg');
-            svg.setAttribute('viewBox', '0 0 200 200');
+            svg.setAttribute('viewBox', '0 0 240 240');
+            
+            // 添加中心圆形阴影
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+            filter.setAttribute('id', 'shadow');
+            const feDropShadow = document.createElementNS('http://www.w3.org/2000/svg', 'feDropShadow');
+            feDropShadow.setAttribute('dx', '0');
+            feDropShadow.setAttribute('dy', '4');
+            feDropShadow.setAttribute('stdDeviation', '8');
+            feDropShadow.setAttribute('flood-opacity', '0.2');
+            filter.appendChild(feDropShadow);
+            defs.appendChild(filter);
+            svg.appendChild(defs);
             
             // 创建图例
             const legend = document.createElement('div');
             legend.className = 'pie-legend';
             
+            // 添加图例标题
+            const legendTitle = document.createElement('div');
+            legendTitle.innerHTML = '<strong style="color: #374151; margin-bottom: 10px; display: block;">活动占比分析</strong>';
+            legend.appendChild(legendTitle);
+            
             data.slice(0, 10).forEach((item, index) => {
                 const percentage = (item.value / total) * 100;
                 const angle = (item.value / total) * 360;
                 
-                if (percentage > 1) { // 只显示占比大于1%的部分
+                if (percentage > 0.5) { // 只显示占比大于0.5%的部分
                     // 创建饼图切片
                     const slice = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                     const startAngle = currentAngle * Math.PI / 180;
                     const endAngle = (currentAngle + angle) * Math.PI / 180;
                     
-                    const x1 = 100 + 80 * Math.cos(startAngle);
-                    const y1 = 100 + 80 * Math.sin(startAngle);
-                    const x2 = 100 + 80 * Math.cos(endAngle);
-                    const y2 = 100 + 80 * Math.sin(endAngle);
+                    const radius = 90;
+                    const centerX = 120;
+                    const centerY = 120;
+                    
+                    const x1 = centerX + radius * Math.cos(startAngle);
+                    const y1 = centerY + radius * Math.sin(startAngle);
+                    const x2 = centerX + radius * Math.cos(endAngle);
+                    const y2 = centerY + radius * Math.sin(endAngle);
                     
                     const largeArc = angle > 180 ? 1 : 0;
                     
-                    const pathData = `M 100 100 L ${x1} ${y1} A 80 80 0 ${largeArc} 1 ${x2} ${y2} Z`;
+                    const pathData = `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`;
                     
                     slice.setAttribute('d', pathData);
                     slice.setAttribute('fill', colors[index % colors.length]);
                     slice.setAttribute('stroke', 'white');
-                    slice.setAttribute('stroke-width', '2');
+                    slice.setAttribute('stroke-width', '3');
+                    slice.setAttribute('filter', 'url(#shadow)');
+                    slice.style.cursor = 'pointer';
+                    
+                    // 添加悬停效果
+                    slice.addEventListener('mouseenter', function() {
+                        this.style.transform = 'scale(1.05)';
+                        this.style.transformOrigin = `${centerX}px ${centerY}px`;
+                    });
+                    slice.addEventListener('mouseleave', function() {
+                        this.style.transform = 'scale(1)';
+                    });
                     
                     svg.appendChild(slice);
                     
@@ -425,10 +600,13 @@
                 // 创建图例项
                 const legendItem = document.createElement('div');
                 legendItem.className = 'legend-item';
+                const displayName = item.name.length > 25 ? item.name.substring(0, 25) + '...' : item.name;
                 legendItem.innerHTML = `
                     <div class="legend-color" style="background-color: ${colors[index % colors.length]}"></div>
-                    <span>${item.name.length > 20 ? item.name.substring(0, 20) + '...' : item.name}</span>
-                    <span class="text-gray-500">(${percentage.toFixed(1)}%)</span>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 500; color: #1f2937;">${displayName}</div>
+                        <div style="font-size: 11px; color: #6b7280;">${formatNumber(item.value)} (${percentage.toFixed(1)}%)</div>
+                    </div>
                 `;
                 legend.appendChild(legendItem);
             });
