@@ -1,287 +1,319 @@
-import React, { useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Somnia 活动数据面板</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        }
+        .chart-container {
+            width: 100%;
+            height: 500px;
+            background: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            color: #64748b;
+            font-size: 18px;
+        }
+        .filter-button {
+            padding: 8px 12px;
+            margin: 4px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #f9fafb;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        .filter-button:hover {
+            background: #f3f4f6;
+        }
+        .filter-button.excluded {
+            background: #fef2f2;
+            border-color: #fca5a5;
+            color: #dc2626;
+            text-decoration: line-through;
+        }
+        .filter-button.included {
+            background: #f0fdf4;
+            border-color: #86efac;
+            color: #16a34a;
+        }
+        .view-button {
+            padding: 8px 16px;
+            margin: 2px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #f9fafb;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .view-button.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div class="w-full p-6 bg-gray-50 min-h-screen">
+            <div class="max-w-7xl mx-auto">
+                <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">
+                    Somnia 活动表现数据面板
+                </h1>
+                
+                <!-- 数据筛选器 -->
+                <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+                    <h3 class="text-lg font-semibold mb-3 text-gray-800">数据筛选器 - 点击排除/包含项目</h3>
+                    <div id="filter-buttons" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                        <!-- 筛选按钮将由JavaScript动态生成 -->
+                    </div>
+                    <button id="reset-filter" class="mt-3 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors" style="display: none;">
+                        重置所有筛选
+                    </button>
+                </div>
+                
+                <!-- 视图切换 -->
+                <div class="flex justify-center mb-6">
+                    <div class="bg-white rounded-lg p-1 shadow-md">
+                        <button id="bar-view" class="view-button active">柱状图</button>
+                        <button id="pie-view" class="view-button">饼图</button>
+                    </div>
+                </div>
 
-const SomniaDataVisualization = () => {
-  const [viewType, setViewType] = useState('bar');
-  const [excludedItems, setExcludedItems] = useState([]);
-  
-  const data = [
-    { name: 'Mullet Cop', value: 217614 },
-    { name: 'Somnia Gaming Room', value: 223587 },
-    { name: 'Onchain Gaming Frenzy', value: 261410 },
-    { name: 'Netherak Demons', value: 242406 },
-    { name: 'Somnia Playground', value: 1862252 },
-    { name: 'Darktable x Somnia', value: 254279 },
-    { name: 'Somnia Testnet Odyssey – Mascot Memecoin', value: 1695336 },
-    { name: 'Somnia Testnet Odyssey – Sharing is Caring', value: 1894847 },
-    { name: 'Ecosystem on the Horizon', value: 163990 },
-    { name: 'Chunked Diamond Rush', value: 28440 },
-    { name: 'QRusader', value: 155861 },
-    { name: 'SocialFi on Somnia', value: 119240 },
-    { name: 'Masks of the Void', value: 185591 },
-    { name: 'Intersection of DeFi & AI', value: 192936 },
-    { name: 'Somnia Testnet Odyssey – Socials', value: 9682404 },
-    { name: 'NFT Weekend Mania', value: 132455 },
-    { name: 'Somnia Yappers', value: 140527 },
-    { name: 'Create your Somniac Buddy', value: 169084 },
-    { name: 'Somniacs, feed the Dragon!', value: 517688 },
-    { name: 'Gamers L.A.B', value: 106161 }
-  ];
+                <!-- 统计卡片 -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                    <div class="stat-card">
+                        <h3 class="text-sm font-medium text-gray-500">活动总数</h3>
+                        <p id="total-count" class="text-2xl font-bold text-gray-900">20</p>
+                        <p id="excluded-count" class="text-xs text-gray-400"></p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 class="text-sm font-medium text-gray-500">总参与度</h3>
+                        <p id="total-engagement" class="text-2xl font-bold text-gray-900">--</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 class="text-sm font-medium text-gray-500">最高活动</h3>
+                        <p id="highest-name" class="text-lg font-bold text-gray-900">--</p>
+                        <p id="highest-value" class="text-sm text-gray-600">--</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 class="text-sm font-medium text-gray-500">平均参与度</h3>
+                        <p id="average-engagement" class="text-2xl font-bold text-gray-900">--</p>
+                    </div>
+                </div>
 
-  // 筛选和排序数据
-  const filteredData = data.filter(item => !excludedItems.includes(item.name));
-  const sortedData = [...filteredData].sort((a, b) => b.value - a.value);
-  
-  const toggleExclude = (itemName) => {
-    setExcludedItems(prev => 
-      prev.includes(itemName) 
-        ? prev.filter(name => name !== itemName)
-        : [...prev, itemName]
-    );
-  };
-  
-  // 颜色调色板
-  const colors = [
-    '#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1',
-    '#d084d0', '#ffb347', '#87ceeb', '#dda0dd', '#98fb98',
-    '#f0e68c', '#ff6347', '#40e0d0', '#ee82ee', '#90ee90',
-    '#ffd700', '#ff69b4', '#00ced1', '#ff1493', '#32cd32'
-  ];
+                <!-- 图表容器 -->
+                <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                    <div id="chart-area" class="chart-container">
+                        📊 图表区域（简化版本 - 数据显示在下方表格中）
+                    </div>
+                </div>
 
-  const formatNumber = (value) => {
-    if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(1)}M`;
-    } else if (value >= 1000) {
-      return `${(value / 1000).toFixed(0)}K`;
-    }
-    return value.toString();
-  };
-
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-3 border border-gray-300 rounded shadow-lg">
-          <p className="font-medium text-gray-800">{label}</p>
-          <p className="text-blue-600">
-            数值: {payload[0].value.toLocaleString()}
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  return (
-    <div className="w-full p-6 bg-gray-50 min-h-screen">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">
-          Somnia 活动表现数据面板
-        </h1>
-        
-        {/* 数据筛选器 */}
-        <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-          <h3 className="text-lg font-semibold mb-3 text-gray-800">数据筛选器 - 点击排除/包含项目</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-            {data.map(item => (
-              <button
-                key={item.name}
-                onClick={() => toggleExclude(item.name)}
-                className={`p-2 text-sm rounded border transition-colors text-left ${
-                  excludedItems.includes(item.name)
-                    ? 'bg-red-100 border-red-300 text-red-700 line-through'
-                    : 'bg-green-50 border-green-300 text-green-700 hover:bg-green-100'
-                }`}
-              >
-                {item.name} ({formatNumber(item.value)})
-              </button>
-            ))}
-          </div>
-          {excludedItems.length > 0 && (
-            <button
-              onClick={() => setExcludedItems([])}
-              className="mt-3 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-            >
-              重置所有筛选
-            </button>
-          )}
-        </div>
-        
-        {/* 视图切换 */}
-        <div className="flex justify-center mb-6">
-          <div className="bg-white rounded-lg p-1 shadow-md">
-            <button
-              onClick={() => setViewType('bar')}
-              className={`px-4 py-2 rounded-md transition-colors ${
-                viewType === 'bar' 
-                  ? 'bg-blue-500 text-white' 
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              柱状图
-            </button>
-            <button
-              onClick={() => setViewType('pie')}
-              className={`px-4 py-2 rounded-md transition-colors ${
-                viewType === 'pie' 
-                  ? 'bg-blue-500 text-white' 
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              饼图
-            </button>
-          </div>
-        </div>
-
-        {/* 统计卡片 */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white p-4 rounded-lg shadow-md">
-            <h3 className="text-sm font-medium text-gray-500">活动总数</h3>
-            <p className="text-2xl font-bold text-gray-900">{filteredData.length}</p>
-            {excludedItems.length > 0 && (
-              <p className="text-xs text-gray-400">（已排除 {excludedItems.length} 个）</p>
-            )}
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-md">
-            <h3 className="text-sm font-medium text-gray-500">总参与度</h3>
-            <p className="text-2xl font-bold text-gray-900">
-              {formatNumber(filteredData.reduce((sum, item) => sum + item.value, 0))}
-            </p>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-md">
-            <h3 className="text-sm font-medium text-gray-500">最高活动</h3>
-            <p className="text-lg font-bold text-gray-900">{sortedData[0]?.name || '无数据'}</p>
-            <p className="text-sm text-gray-600">{sortedData[0]?.value ? formatNumber(sortedData[0].value) : ''}</p>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-md">
-            <h3 className="text-sm font-medium text-gray-500">平均参与度</h3>
-            <p className="text-2xl font-bold text-gray-900">
-              {filteredData.length > 0 ? formatNumber(Math.round(filteredData.reduce((sum, item) => sum + item.value, 0) / filteredData.length)) : '0'}
-            </p>
-          </div>
-        </div>
-
-        {/* 图表容器 */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          {sortedData.length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-gray-500 text-lg">没有数据可显示</p>
-              <p className="text-gray-400 text-sm">请重置筛选器以查看数据</p>
+                <!-- 表格 -->
+                <div class="table-container">
+                    <div class="px-6 py-4 bg-gray-50 border-b">
+                        <h2 class="text-xl font-semibold text-gray-800">活动排行榜</h2>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">排名</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">活动名称</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">参与度数量</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">占比</th>
+                                </tr>
+                            </thead>
+                            <tbody id="data-table" class="bg-white divide-y divide-gray-200">
+                                <!-- 表格数据将由JavaScript动态生成 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-          ) : (
-            <>
-              {viewType === 'bar' ? (
-                <div style={{ width: '100%', height: '600px' }}>
-                  <ResponsiveContainer>
-                    <BarChart
-                      data={sortedData}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 100 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis 
-                        dataKey="name" 
-                        angle={-45}
-                        textAnchor="end"
-                        height={120}
-                        fontSize={12}
-                      />
-                      <YAxis 
-                        tickFormatter={formatNumber}
-                        fontSize={12}
-                      />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend />
-                      <Bar 
-                        dataKey="value" 
-                        fill="#8884d8"
-                        name="参与度数量"
-                        radius={[4, 4, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              ) : (
-                <div style={{ width: '100%', height: '600px' }}>
-                  <ResponsiveContainer>
-                    <PieChart>
-                      <Pie
-                        data={sortedData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => 
-                          percent > 3 ? `${name.length > 15 ? name.substring(0, 15) + '...' : name} (${(percent).toFixed(1)}%)` : ''
-                        }
-                        outerRadius={200}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {sortedData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        formatter={(value, name) => [value.toLocaleString(), '参与度']}
-                        labelFormatter={(label) => `活动: ${label}`}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-            </>
-          )}
         </div>
-
-        {/* 顶级表现者排行榜 */}
-        <div className="mt-8 bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="px-6 py-4 bg-gray-50 border-b">
-            <h2 className="text-xl font-semibold text-gray-800">前10名活动</h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    排名
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    活动名称
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    参与度数量
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    占比
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {sortedData.slice(0, 10).map((item, index) => {
-                  const total = filteredData.reduce((sum, d) => sum + d.value, 0);
-                  const percentage = total > 0 ? ((item.value / total) * 100).toFixed(1) : '0';
-                  return (
-                    <tr key={item.name} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        #{index + 1}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        {item.name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {item.value.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {percentage}%
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
     </div>
-  );
-};
 
-export default SomniaDataVisualization;
+    <script>
+        // 数据
+        const originalData = [
+            { name: 'Mullet Cop', value: 217614 },
+            { name: 'Somnia Gaming Room', value: 223587 },
+            { name: 'Onchain Gaming Frenzy', value: 261410 },
+            { name: 'Netherak Demons', value: 242406 },
+            { name: 'Somnia Playground', value: 1862252 },
+            { name: 'Darktable x Somnia', value: 254279 },
+            { name: 'Somnia Testnet Odyssey – Mascot Memecoin', value: 1695336 },
+            { name: 'Somnia Testnet Odyssey – Sharing is Caring', value: 1894847 },
+            { name: 'Ecosystem on the Horizon', value: 163990 },
+            { name: 'Chunked Diamond Rush', value: 28440 },
+            { name: 'QRusader', value: 155861 },
+            { name: 'SocialFi on Somnia', value: 119240 },
+            { name: 'Masks of the Void', value: 185591 },
+            { name: 'Intersection of DeFi & AI', value: 192936 },
+            { name: 'Somnia Testnet Odyssey – Socials', value: 9682404 },
+            { name: 'NFT Weekend Mania', value: 132455 },
+            { name: 'Somnia Yappers', value: 140527 },
+            { name: 'Create your Somniac Buddy', value: 169084 },
+            { name: 'Somniacs, feed the Dragon!', value: 517688 },
+            { name: 'Gamers L.A.B', value: 106161 }
+        ];
+
+        let excludedItems = [];
+        let currentView = 'bar';
+
+        // 工具函数
+        function formatNumber(value) {
+            if (value >= 1000000) {
+                return `${(value / 1000000).toFixed(1)}M`;
+            } else if (value >= 1000) {
+                return `${(value / 1000).toFixed(0)}K`;
+            }
+            return value.toString();
+        }
+
+        function getFilteredData() {
+            return originalData.filter(item => !excludedItems.includes(item.name));
+        }
+
+        function getSortedData() {
+            return getFilteredData().sort((a, b) => b.value - a.value);
+        }
+
+        // 切换排除状态
+        function toggleExclude(itemName) {
+            if (excludedItems.includes(itemName)) {
+                excludedItems = excludedItems.filter(name => name !== itemName);
+            } else {
+                excludedItems.push(itemName);
+            }
+            updateDisplay();
+        }
+
+        // 重置筛选
+        function resetFilter() {
+            excludedItems = [];
+            updateDisplay();
+        }
+
+        // 生成筛选按钮
+        function generateFilterButtons() {
+            const container = document.getElementById('filter-buttons');
+            container.innerHTML = '';
+            
+            originalData.forEach(item => {
+                const button = document.createElement('button');
+                button.className = `filter-button ${excludedItems.includes(item.name) ? 'excluded' : 'included'}`;
+                button.textContent = `${item.name} (${formatNumber(item.value)})`;
+                button.onclick = () => toggleExclude(item.name);
+                container.appendChild(button);
+            });
+        }
+
+        // 更新统计数据
+        function updateStats() {
+            const filteredData = getFilteredData();
+            const sortedData = getSortedData();
+            
+            document.getElementById('total-count').textContent = filteredData.length;
+            document.getElementById('excluded-count').textContent = 
+                excludedItems.length > 0 ? `（已排除 ${excludedItems.length} 个）` : '';
+            
+            const totalEngagement = filteredData.reduce((sum, item) => sum + item.value, 0);
+            document.getElementById('total-engagement').textContent = formatNumber(totalEngagement);
+            
+            if (sortedData.length > 0) {
+                document.getElementById('highest-name').textContent = sortedData[0].name;
+                document.getElementById('highest-value').textContent = formatNumber(sortedData[0].value);
+                
+                const average = Math.round(totalEngagement / filteredData.length);
+                document.getElementById('average-engagement').textContent = formatNumber(average);
+            } else {
+                document.getElementById('highest-name').textContent = '无数据';
+                document.getElementById('highest-value').textContent = '';
+                document.getElementById('average-engagement').textContent = '0';
+            }
+        }
+
+        // 更新表格
+        function updateTable() {
+            const sortedData = getSortedData();
+            const tableBody = document.getElementById('data-table');
+            const filteredData = getFilteredData();
+            const total = filteredData.reduce((sum, item) => sum + item.value, 0);
+            
+            tableBody.innerHTML = '';
+            
+            sortedData.forEach((item, index) => {
+                const percentage = total > 0 ? ((item.value / total) * 100).toFixed(1) : '0';
+                const row = document.createElement('tr');
+                row.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#${index + 1}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${item.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.value.toLocaleString()}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${percentage}%</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // 更新显示
+        function updateDisplay() {
+            generateFilterButtons();
+            updateStats();
+            updateTable();
+            
+            // 显示/隐藏重置按钮
+            const resetButton = document.getElementById('reset-filter');
+            resetButton.style.display = excludedItems.length > 0 ? 'block' : 'none';
+        }
+
+        // 视图切换
+        function switchView(view) {
+            currentView = view;
+            
+            document.getElementById('bar-view').className = 
+                view === 'bar' ? 'view-button active' : 'view-button';
+            document.getElementById('pie-view').className = 
+                view === 'pie' ? 'view-button active' : 'view-button';
+            
+            const chartArea = document.getElementById('chart-area');
+            if (view === 'bar') {
+                chartArea.textContent = '📊 柱状图视图（数据详情请查看下方表格）';
+            } else {
+                chartArea.textContent = '🥧 饼图视图（数据详情请查看下方表格）';
+            }
+        }
+
+        // 事件监听
+        document.getElementById('bar-view').onclick = () => switchView('bar');
+        document.getElementById('pie-view').onclick = () => switchView('pie');
+        document.getElementById('reset-filter').onclick = resetFilter;
+
+        // 初始化
+        updateDisplay();
+    </script>
+</body>
+</html>
