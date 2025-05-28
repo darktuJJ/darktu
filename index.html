@@ -1,0 +1,287 @@
+import React, { useState } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+
+const SomniaDataVisualization = () => {
+  const [viewType, setViewType] = useState('bar');
+  const [excludedItems, setExcludedItems] = useState([]);
+  
+  const data = [
+    { name: 'Mullet Cop', value: 217614 },
+    { name: 'Somnia Gaming Room', value: 223587 },
+    { name: 'Onchain Gaming Frenzy', value: 261410 },
+    { name: 'Netherak Demons', value: 242406 },
+    { name: 'Somnia Playground', value: 1862252 },
+    { name: 'Darktable x Somnia', value: 254279 },
+    { name: 'Somnia Testnet Odyssey – Mascot Memecoin', value: 1695336 },
+    { name: 'Somnia Testnet Odyssey – Sharing is Caring', value: 1894847 },
+    { name: 'Ecosystem on the Horizon', value: 163990 },
+    { name: 'Chunked Diamond Rush', value: 28440 },
+    { name: 'QRusader', value: 155861 },
+    { name: 'SocialFi on Somnia', value: 119240 },
+    { name: 'Masks of the Void', value: 185591 },
+    { name: 'Intersection of DeFi & AI', value: 192936 },
+    { name: 'Somnia Testnet Odyssey – Socials', value: 9682404 },
+    { name: 'NFT Weekend Mania', value: 132455 },
+    { name: 'Somnia Yappers', value: 140527 },
+    { name: 'Create your Somniac Buddy', value: 169084 },
+    { name: 'Somniacs, feed the Dragon!', value: 517688 },
+    { name: 'Gamers L.A.B', value: 106161 }
+  ];
+
+  // 筛选和排序数据
+  const filteredData = data.filter(item => !excludedItems.includes(item.name));
+  const sortedData = [...filteredData].sort((a, b) => b.value - a.value);
+  
+  const toggleExclude = (itemName) => {
+    setExcludedItems(prev => 
+      prev.includes(itemName) 
+        ? prev.filter(name => name !== itemName)
+        : [...prev, itemName]
+    );
+  };
+  
+  // 颜色调色板
+  const colors = [
+    '#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1',
+    '#d084d0', '#ffb347', '#87ceeb', '#dda0dd', '#98fb98',
+    '#f0e68c', '#ff6347', '#40e0d0', '#ee82ee', '#90ee90',
+    '#ffd700', '#ff69b4', '#00ced1', '#ff1493', '#32cd32'
+  ];
+
+  const formatNumber = (value) => {
+    if (value >= 1000000) {
+      return `${(value / 1000000).toFixed(1)}M`;
+    } else if (value >= 1000) {
+      return `${(value / 1000).toFixed(0)}K`;
+    }
+    return value.toString();
+  };
+
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 border border-gray-300 rounded shadow-lg">
+          <p className="font-medium text-gray-800">{label}</p>
+          <p className="text-blue-600">
+            数值: {payload[0].value.toLocaleString()}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <div className="w-full p-6 bg-gray-50 min-h-screen">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">
+          Somnia 活动表现数据面板
+        </h1>
+        
+        {/* 数据筛选器 */}
+        <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+          <h3 className="text-lg font-semibold mb-3 text-gray-800">数据筛选器 - 点击排除/包含项目</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {data.map(item => (
+              <button
+                key={item.name}
+                onClick={() => toggleExclude(item.name)}
+                className={`p-2 text-sm rounded border transition-colors text-left ${
+                  excludedItems.includes(item.name)
+                    ? 'bg-red-100 border-red-300 text-red-700 line-through'
+                    : 'bg-green-50 border-green-300 text-green-700 hover:bg-green-100'
+                }`}
+              >
+                {item.name} ({formatNumber(item.value)})
+              </button>
+            ))}
+          </div>
+          {excludedItems.length > 0 && (
+            <button
+              onClick={() => setExcludedItems([])}
+              className="mt-3 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+            >
+              重置所有筛选
+            </button>
+          )}
+        </div>
+        
+        {/* 视图切换 */}
+        <div className="flex justify-center mb-6">
+          <div className="bg-white rounded-lg p-1 shadow-md">
+            <button
+              onClick={() => setViewType('bar')}
+              className={`px-4 py-2 rounded-md transition-colors ${
+                viewType === 'bar' 
+                  ? 'bg-blue-500 text-white' 
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              柱状图
+            </button>
+            <button
+              onClick={() => setViewType('pie')}
+              className={`px-4 py-2 rounded-md transition-colors ${
+                viewType === 'pie' 
+                  ? 'bg-blue-500 text-white' 
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              饼图
+            </button>
+          </div>
+        </div>
+
+        {/* 统计卡片 */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white p-4 rounded-lg shadow-md">
+            <h3 className="text-sm font-medium text-gray-500">活动总数</h3>
+            <p className="text-2xl font-bold text-gray-900">{filteredData.length}</p>
+            {excludedItems.length > 0 && (
+              <p className="text-xs text-gray-400">（已排除 {excludedItems.length} 个）</p>
+            )}
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-md">
+            <h3 className="text-sm font-medium text-gray-500">总参与度</h3>
+            <p className="text-2xl font-bold text-gray-900">
+              {formatNumber(filteredData.reduce((sum, item) => sum + item.value, 0))}
+            </p>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-md">
+            <h3 className="text-sm font-medium text-gray-500">最高活动</h3>
+            <p className="text-lg font-bold text-gray-900">{sortedData[0]?.name || '无数据'}</p>
+            <p className="text-sm text-gray-600">{sortedData[0]?.value ? formatNumber(sortedData[0].value) : ''}</p>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-md">
+            <h3 className="text-sm font-medium text-gray-500">平均参与度</h3>
+            <p className="text-2xl font-bold text-gray-900">
+              {filteredData.length > 0 ? formatNumber(Math.round(filteredData.reduce((sum, item) => sum + item.value, 0) / filteredData.length)) : '0'}
+            </p>
+          </div>
+        </div>
+
+        {/* 图表容器 */}
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          {sortedData.length === 0 ? (
+            <div className="text-center py-20">
+              <p className="text-gray-500 text-lg">没有数据可显示</p>
+              <p className="text-gray-400 text-sm">请重置筛选器以查看数据</p>
+            </div>
+          ) : (
+            <>
+              {viewType === 'bar' ? (
+                <div style={{ width: '100%', height: '600px' }}>
+                  <ResponsiveContainer>
+                    <BarChart
+                      data={sortedData}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 100 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="name" 
+                        angle={-45}
+                        textAnchor="end"
+                        height={120}
+                        fontSize={12}
+                      />
+                      <YAxis 
+                        tickFormatter={formatNumber}
+                        fontSize={12}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend />
+                      <Bar 
+                        dataKey="value" 
+                        fill="#8884d8"
+                        name="参与度数量"
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div style={{ width: '100%', height: '600px' }}>
+                  <ResponsiveContainer>
+                    <PieChart>
+                      <Pie
+                        data={sortedData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => 
+                          percent > 3 ? `${name.length > 15 ? name.substring(0, 15) + '...' : name} (${(percent).toFixed(1)}%)` : ''
+                        }
+                        outerRadius={200}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {sortedData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value, name) => [value.toLocaleString(), '参与度']}
+                        labelFormatter={(label) => `活动: ${label}`}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* 顶级表现者排行榜 */}
+        <div className="mt-8 bg-white rounded-lg shadow-lg overflow-hidden">
+          <div className="px-6 py-4 bg-gray-50 border-b">
+            <h2 className="text-xl font-semibold text-gray-800">前10名活动</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    排名
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    活动名称
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    参与度数量
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    占比
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {sortedData.slice(0, 10).map((item, index) => {
+                  const total = filteredData.reduce((sum, d) => sum + d.value, 0);
+                  const percentage = total > 0 ? ((item.value / total) * 100).toFixed(1) : '0';
+                  return (
+                    <tr key={item.name} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        #{index + 1}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {item.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {item.value.toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {percentage}%
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SomniaDataVisualization;
